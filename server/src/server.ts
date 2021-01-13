@@ -20,9 +20,8 @@ import {
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
-import { extractFunction, getHasMapping } from './commentUtils';
 import { isFunction } from './reader';
-import { extractFunctionVariables, extractFunctionVariablesWithoutComment, extractVariables } from './variables';
+import { extractFunctionVariablesWithoutComment, extractVariables } from './variables';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -51,6 +50,8 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities.textDocument.publishDiagnostics &&
 		capabilities.textDocument.publishDiagnostics.relatedInformation
 	);
+
+	console.log(hasDiagnosticRelatedInformationCapability)
 
 	const result: InitializeResult = {
 		capabilities: {
@@ -164,7 +165,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 					start: textDocument.positionAt(variable.range.start),
 					end: textDocument.positionAt(variable.range.end)
 				},
-				message: `${variable.name}: no comment`,
+				message: `${variable.name}: 没有注释`,
 				source: 'Matlab Comment Checker'
 			}
 			// 加入到结果
