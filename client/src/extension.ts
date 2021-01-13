@@ -48,7 +48,7 @@ export function activate(context: ExtensionContext) {
 	// Create the language client and start the client.
 	client = new LanguageClient(
 		'matlabCommentChecker',
-		'Language Server Example',
+		'Matlab Comment Checker',
 		serverOptions,
 		clientOptions
 	);
