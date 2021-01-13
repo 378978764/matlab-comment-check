@@ -17,4 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
 			providedCodeActionKinds: FunctionCommentAction.providedCodeActionKinds
 		})
 	);
+
+	// 提示用户
+	vscode.window.showInformationMessage('Matlab Comment Checker Plugin activated!')
+	
 }
