@@ -2,8 +2,6 @@
  * 将注释对象化管理
  */
 
-import { readContent } from "./reader"
-
 type ParamItem = {
   // 参数名称
   name: string,

@@ -1,6 +1,4 @@
-import { LogTraceNotification } from 'vscode-languageserver';
 import { extractFunction, getHasMapping } from './commentUtils';
-import { readContent } from './reader';
 import TextUtils from "./TextUtils";
 
 type VariableItem = {
