@@ -4,7 +4,7 @@
   "displayName": "Matlab Comment Checker",
   "author": "shengdi",
   "license": "MIT",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "icon": "images/icon.png",
   "repository": {
     "type": "git",
