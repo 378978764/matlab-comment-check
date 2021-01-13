@@ -1,4 +1,4 @@
-import { extractFunction, getHasMapping } from './commentUtils';
+import { extractFunction, functionCommentToString, getHasMapping, ParamItem } from './commentUtils';
 import TextUtils from "./TextUtils";
 
 type VariableItem = {
@@ -168,11 +168,59 @@ export function extractFunctionVariablesWithoutComment(content: string) : Array<
   // 从最上面的注释提取的
   const commentFunction = extractFunction(content)
   // 看一下哪些变量没有注释
-  const paramsMapping = getHasMapping(commentFunction.param)
+  const paramsMapping = getHasMapping(commentFunction.params)
   const returnsMapping = getHasMapping(commentFunction.returns)
   // 没有注释的 function 变量
   const paramsNo = functionVariables.params.filter(v => !paramsMapping[v.name])
   const returnsNo = functionVariables.returns.filter(v => !returnsMapping[v.name])
   const noArr = paramsNo.concat(returnsNo)
   return noArr
+}
+
+/**
+ * 合并新老参数
+ * @param oldParams 旧的，源码中写的参数
+ * @param functionVariables 新的，在 funciton 那一行写的参数
+ */
+function getNewParams (oldParams: ParamItem[], functionVariables: VariableItem[]) : ParamItem[] {
+  let newParams : Array<ParamItem> = []
+  for (let param of functionVariables) {
+    let oldParam = oldParams.find(v => v.name === param.name)
+    if (oldParam) {
+      newParams.push(oldParam)
+    } else {
+      // 之前没有，新建一个
+      newParams.push({
+        name: param.name,
+        value: '',
+        comment: ''
+      })
+    }
+  }
+  // 可能存在结构体的写法，这种情况下，需要保留原来的 oldParams 中的结构体
+  const valirOldParams = oldParams.filter(v => v.name.includes('.')).filter(v => {
+    const key = v.name.split('.')[0]
+    return functionVariables.find(variable => variable.name === key) !== null
+  })
+  newParams = newParams.concat(valirOldParams)
+  return newParams
+}
+
+/**
+ * 从源码中，更新最上方的注释
+ * @param content 源码
+ */
+export function updateComment(content: string) : string {
+  // 得到原来的注释
+  let commentFunction = extractFunction(content)
+  // function 那一行
+  const functionVariables = extractFunctionVariables(content)
+  // 将原来的注释更新到从 function 行提取的上面
+  const newParams = getNewParams(commentFunction.params, functionVariables.params)
+  const newReturns = getNewParams(commentFunction.returns, functionVariables.returns)
+  // 输出结果
+  commentFunction.params = newParams
+  commentFunction.returns = newReturns
+  // 返回
+  return functionCommentToString(commentFunction)
 }

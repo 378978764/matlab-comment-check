@@ -2,7 +2,7 @@
  * 将注释对象化管理
  */
 
-type ParamItem = {
+export type ParamItem = {
   // 参数名称
   name: string,
   // 参数说明
@@ -12,11 +12,11 @@ type ParamItem = {
 }
 
 // 函数说明
-type CommentFunction = {
+export type CommentFunction = {
   // 功能
   function: string,
   // 参数
-  param: Array<ParamItem>,
+  params: Array<ParamItem>,
   // 返回值
   returns: Array<ParamItem>,
   // 备注
@@ -24,7 +24,7 @@ type CommentFunction = {
 }
 
 // 文件说明
-type CommentFile = {
+export type CommentFile = {
   // 功能
   function: string,
   // 核心变量
@@ -116,7 +116,7 @@ export function extractFunction (content: string) : CommentFunction {
   let res : CommentFunction = {
     function: functionContent,
     comment: commentContent,
-    param: paramArray,
+    params: paramArray,
     returns: returnsArray
   }
   return res
@@ -139,14 +139,14 @@ function returnPart(key: string, value: string) : string {
 
 function returnPartParams (key: string, params: Array<ParamItem>) : string {
   return `% ${key}：\n${params.map(v => {
-    return `%   ${v.name}: ${v.value}${v.comment === '-' ? '' : ' | ' + v.comment}`
+    return `%   ${v.name}: ${v.value}${(v.comment === '-' || v.comment === '') ? '' : ' | ' + v.comment}`
   }).join('\n')}\n`
 }
 
 export function functionCommentToString (res: CommentFunction) : string {
   let content = ''
   content += returnPart('功能', res.function)
-  content += returnPartParams('参数', res.param)
+  content += returnPartParams('参数', res.params)
   content += returnPartParams('返回值', res.returns)
   content += returnPart('备注', res.comment)
   return content
@@ -178,4 +178,25 @@ export function getHasMapping (arr: Array<ParamItem>) : { [name: string]: boolea
       }
     }
   }, init)
+}
+
+/**
+ * 获取注释内容的范围，在源码中开始索引和结束索引
+ * @param content 源码
+ */
+export function getCommentRange (content: string) : { start: number, end: number } {
+  // 思路就是从第一行开始，往后面找第一个空行，如果第一行不是注释，则返回 (0, 0)
+  const arr = content.split('\n')
+  let end = 0
+  let start = 0
+  for (let i = 0; i < arr.length; i++) {
+    const line = arr[i].trim()
+    if (!line.startsWith('%')) {
+      return { start, end }
+    } else {
+      // 第一行就是注释，往后找
+      end = end + arr[i].length + 1
+    }
+  }
+  return { start, end }
 }
