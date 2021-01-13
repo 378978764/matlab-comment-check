@@ -4,11 +4,11 @@
   "displayName": "Matlab Comment Checker",
   "author": "shengdi",
   "license": "MIT",
-  "version": "1.0.5",
+  "version": "1.0.11",
   "icon": "images/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/378978764/matlab-comment-check.git"
+    "url": "https://github.com/378978764/matlab-comment-check/"
   },
   "publisher": "shengdi",
   "categories": [],
@@ -62,5 +62,6 @@
     "mocha": "^8.1.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.0.2"
-  }
+  },
+  "dependencies": {}
 }
