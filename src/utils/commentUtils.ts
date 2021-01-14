@@ -66,7 +66,7 @@ function getPart(content: string, part: string) {
     }
     if (line === '%}') {
       inMultiComment = false
-      result.push(`{%\n${multiComment}%}`)
+      result.push(`%{\n${multiComment}%}`)
       multiComment = ''
       continue
     }
@@ -160,7 +160,12 @@ export function extractFile (content: string) : CommentFile {
 }
 
 function returnPart(key: string, value: string) : string {
-  return `% ${key}：\n${value.split('\n').map(v => '%   ' + v).join('\n')}\n`
+  if (value.startsWith('%{')) {
+    // 是多行注释
+    return `% ${key}：\n${value}\n`
+  } else {
+    return `% ${key}：\n${value.split('\n').map(v => '%   ' + v).join('\n')}\n`
+  }
 }
 
 function returnPartParams (key: string, params: Array<ParamItem>) : string {
