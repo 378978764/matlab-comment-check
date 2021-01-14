@@ -3,7 +3,6 @@
  */
 
 import { readContent } from "./reader"
-import { extractFunctionVariablesWithoutComment, extractVariables, getNewParams, mergeVariables } from "./variables"
 
 export type ParamItem = {
   // 参数名称
