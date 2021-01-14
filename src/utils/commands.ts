@@ -4,7 +4,7 @@ import { extractFile, extractFunction, fileCommentToString, functionCommentToStr
 import { extractVariables, mergeVariables } from './variables'
 import { isFunction } from './reader'
 
-function updateVariables(filePath: string) {
+export function updateVariables() {
   const editor = vscode.window.activeTextEditor
   if (editor) {
     const doc = editor.document

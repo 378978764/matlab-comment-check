@@ -3,6 +3,7 @@
  */
 
 import { readContent } from "./reader"
+import TextUtils from "./TextUtils"
 
 export type ParamItem = {
   // 参数名称
@@ -83,7 +84,7 @@ function getPart(content: string, part: string) {
         multiComment = multiComment + line + '\n'
       } else {
         // 单行注释
-        result.push(line.slice(3).trim())
+        result.push(line.slice(1).trim())
       }
     }
   }
@@ -91,25 +92,19 @@ function getPart(content: string, part: string) {
   return result.join('\n')
 }
 
-function extractTable(content: string) {
-  let reg = /(\S+): (.+)/g
+function extractTable(content: string) : ParamItem[] {
+  let reg = /(\S+): ?(.*)/gm
   reg.lastIndex = 0
-  let result = []
-  let res: RegExpExecArray | null
-  let arr
-  while (true) {
-    res = reg.exec(content)
-    if (res === null) {
-      break
+  const res = TextUtils.matchAll(content, reg)
+  return res.map(v => {
+    const arr = v[2].split('|')
+    const item: ParamItem = {
+      name: v[1],
+      value: arr[0].trim(),
+      comment: arr.length > 1 ? arr[1].trim() : '-'      
     }
-    arr = res[2].split(' | ')
-    result.push({
-      name: res[1],
-      value: arr[0],
-      comment: arr.length > 1 ? arr[1] : '-'
-    })
-  }
-  return result
+    return item
+  })
 }
 
 /**
@@ -169,12 +164,19 @@ function returnPart(key: string, value: string) : string {
 }
 
 function returnPartParams (key: string, params: Array<ParamItem>) : string {
-  const res = `% ${key}：\n${params.map(v => {
-    return `%   ${v.name}: ${v.value}${(v.comment === '-' || v.comment === '') ? '' : ' | ' + v.comment}`
-  }).join('\n')}\n`
-  return res === '' ? '%   无' : res
+  if (params.length === 0) {
+    return `% ${key}：\n%   无\n`
+  } else {
+    return `% ${key}：\n${params.map(v => {
+      return `%   ${v.name}: ${v.value}${(v.comment === '-' || v.comment === '') ? '' : ' | ' + v.comment}`
+    }).join('\n')}\n`
+  }
 }
 
+/**
+ * 将函数对象转换成字符串
+ * @param res 解析的函数对象
+ */
 export function functionCommentToString (res: CommentFunction) : string {
   let content = ''
   content += returnPart('功能', res.function)
@@ -196,18 +198,19 @@ export function fileCommentToString (res: CommentFile) : string {
 export function getHasMapping (arr: Array<ParamItem>) : { [name: string]: boolean } {
   let init = {} as { string: boolean }
   return arr.reduce((prev, current) => {
+    const ok = current.value !== ''
     if (current.name.includes('.')) {
-      // 是结构体的写法
+      // 是结构体的写法, objKey 代表当前结构体的名称
       const objKey = current.name.split('.')[0]
       return {
         ...prev,
-        [current.name]: true,
-        [objKey]: true
+        [current.name]: ok,
+        [objKey]: ok
       }
     } else {
       return {
         ...prev,
-        [current.name]: true
+        [current.name]: ok
       }
     }
   }, init)
@@ -250,7 +253,7 @@ export function getCommentRange (content: string) : { start: number, end: number
   return { start, end }
 }
 
-const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\feature_range.m'
-const content = readContent(filePath)
-const res = extractFile(content)
-console.log(res.comment)
+// const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\featureMerge.m'
+// const content = readContent(filePath)
+// const res = extractFunction(content)
+// console.log(res.params)

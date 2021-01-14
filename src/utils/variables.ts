@@ -248,6 +248,7 @@ export function getNewParams (oldParams: ParamItem[], functionVariables: Variabl
 
 /**
  * 从源码中，更新最上方的注释
+ * 这里更新的是函数的
  * @param content 源码
  */
 export function updateComment(content: string) : string {

@@ -1,4 +1,5 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, Command, Diagnostic, ProviderResult, Range, Selection, TextDocument, WorkspaceEdit } from "vscode";
+import { updateVariables } from "./utils/commands";
 import { getCommentRange } from "./utils/commentUtils";
 import { readContent } from "./utils/reader";
 import { updateComment } from "./utils/variables";
@@ -11,6 +12,7 @@ export class FunctionCommentAction implements CodeActionProvider {
     .map(v => this.createAction(document))
   }
   private createAction(doc: TextDocument): CodeAction {
+    // 然后更新函数注释
     const action = new CodeAction('更新函数注释', CodeActionKind.QuickFix)
     action.edit = new WorkspaceEdit()
     const rangeXY = getCommentRange(doc.getText())
@@ -18,7 +20,6 @@ export class FunctionCommentAction implements CodeActionProvider {
       doc.positionAt(rangeXY.start),
       doc.positionAt(rangeXY.end)
     )
-
     const newComment = updateComment(doc.getText())
     action.edit.replace(doc.uri, range, newComment)
     return action
