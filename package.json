@@ -41,7 +41,7 @@
     "snippets": [
       {
         "language": "matlab",
-        "path": "./src/snippets/matlab.json"
+        "path": "./snippets/matlab.json"
       }
     ]
   },

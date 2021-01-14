@@ -9,9 +9,6 @@ import * as vscode from 'vscode';
 import { DiagnosticSeverity } from 'vscode';
 import { extractFunctionVariablesWithoutComment, extractVariables } from './utils/variables';
 
-/** Code that is used to associate diagnostic entries with code actions. */
-export const EMOJI_MENTION = 'emoji_mention';
-
 const SOURCE = 'Matlab Comment Checker'
 
 /**
