@@ -5,6 +5,7 @@
 import * as vscode from 'vscode';
 import { FunctionCommentAction } from './actions';
 import { subscribeToDocumentChanges } from './diagnostics';
+import { registerCommands } from './utils/commands';
 
 export function activate(context: vscode.ExtensionContext) {
 	const matlabCommentDiagnostics = vscode.languages.createDiagnosticCollection("matlabComment");
@@ -17,6 +18,9 @@ export function activate(context: vscode.ExtensionContext) {
 			providedCodeActionKinds: FunctionCommentAction.providedCodeActionKinds
 		})
 	);
+
+	// 注册命令
+	registerCommands(context)
 
 	// 提示用户
 	vscode.window.showInformationMessage('Matlab Comment Checker Plugin activated!')

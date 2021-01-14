@@ -2,6 +2,9 @@
  * 将注释对象化管理
  */
 
+import { readContent } from "./reader"
+import { extractFunctionVariablesWithoutComment, extractVariables, getNewParams, mergeVariables } from "./variables"
+
 export type ParamItem = {
   // 参数名称
   name: string,
@@ -200,3 +203,10 @@ export function getCommentRange (content: string) : { start: number, end: number
   }
   return { start, end }
 }
+
+const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\feature_range_test.m'
+const content = readContent(filePath)
+const res = extractFile(content)
+const variables = extractVariables(content)
+// 合并新老
+res.variables = mergeVariables(res.variables, variables)

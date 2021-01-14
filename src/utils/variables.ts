@@ -183,11 +183,46 @@ export function extractFunctionVariablesWithoutComment(content: string) : Array<
 }
 
 /**
+ * 合并核心变量的参数说明
+ * 以源码主体中写的为准
+ * @param oldParams 旧的，源码头部注释中写地点
+ * @param bodyVariables 新的，从源码整体中提取的
+ */
+export function mergeVariables (oldParams: ParamItem[], bodyVariables: VariableItem[]) : ParamItem[] {
+  let newParams : Array<ParamItem> = []
+  for (let variable of bodyVariables) {
+    if (variable.value === '') {
+      // 主体中没有写
+      let oldParam = oldParams.find(v => v.name === variable.name)
+      if (oldParam) {
+        // 原来的有, 使用原来的
+        newParams.push(oldParam)
+      }
+    } else {
+      // 在源码主体中已经写了注释，以这个为准
+      let newParam: ParamItem = {
+        name: variable.name,
+        value: variable.value,
+        comment: variable.comment
+      }
+      newParams.push(newParam)
+    }
+  }
+  // 可能存在结构体的写法，这种情况下，需要保留原来的 oldParams 中的结构体
+  const valirOldParams = oldParams.filter(v => v.name.includes('.')).filter(v => {
+    const key = v.name.split('.')[0]
+    return bodyVariables.find(variable => variable.name === key) !== null
+  })
+  newParams = newParams.concat(valirOldParams)
+  return newParams
+}
+
+/**
  * 合并新老参数
  * @param oldParams 旧的，源码中写的参数
  * @param functionVariables 新的，在 funciton 那一行写的参数
  */
-function getNewParams (oldParams: ParamItem[], functionVariables: VariableItem[]) : ParamItem[] {
+export function getNewParams (oldParams: ParamItem[], functionVariables: VariableItem[]) : ParamItem[] {
   let newParams : Array<ParamItem> = []
   for (let param of functionVariables) {
     let oldParam = oldParams.find(v => v.name === param.name)
