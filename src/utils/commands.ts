@@ -1,19 +1,32 @@
 import { Range } from 'vscode'
 import * as vscode from 'vscode'
-import { extractFile, fileCommentToString, getCommentRange } from './commentUtils'
+import { extractFile, extractFunction, fileCommentToString, functionCommentToString, getCommentRange } from './commentUtils'
 import { extractVariables, mergeVariables } from './variables'
+import { isFunction } from './reader'
 
 function updateVariables(filePath: string) {
   const editor = vscode.window.activeTextEditor
   if (editor) {
     const doc = editor.document
     const content = editor.document.getText()
-    const res = extractFile(content)
-    const variables = extractVariables(content)
-    // 合并新老
-    res.variables = mergeVariables(res.variables, variables)
-    // 写入编辑器
-    const newComment = fileCommentToString(res)
+    let newComment: string
+    if (isFunction(content)) {
+      // 如果是函数
+      const res = extractFunction(content)
+      const variables = extractVariables(content)
+      // 合并新老
+      res.variables = mergeVariables(res.variables, variables)
+      // 写入编辑器
+      newComment = functionCommentToString(res)
+    } else {
+      // 如果是文件
+      const res = extractFile(content)
+      const variables = extractVariables(content)
+      // 合并新老
+      res.variables = mergeVariables(res.variables, variables)
+      // 写入编辑器
+      newComment = fileCommentToString(res)
+    }
     const rangeXY = getCommentRange(content)
     editor.edit(editBuilder => {
       const range = new Range(

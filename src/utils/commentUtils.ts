@@ -22,6 +22,8 @@ export type CommentFunction = {
   params: Array<ParamItem>,
   // 返回值
   returns: Array<ParamItem>,
+  // 核心变量
+  variables: Array<ParamItem>
   // 备注
   comment: string
 }
@@ -116,10 +118,13 @@ export function extractFunction (content: string) : CommentFunction {
   const paramArray = extractTable(paramContent)
   const returnsContent = getPart(content, '返回值')
   const returnsArray = extractTable(returnsContent)
+  const variablesContent = getPart(content, '核心变量')
+  const variablesArray = extractTable(variablesContent)
   let res : CommentFunction = {
     function: functionContent,
     comment: commentContent,
     params: paramArray,
+    variables: variablesArray,
     returns: returnsArray
   }
   return res
@@ -151,6 +156,7 @@ export function functionCommentToString (res: CommentFunction) : string {
   content += returnPart('功能', res.function)
   content += returnPartParams('参数', res.params)
   content += returnPartParams('返回值', res.returns)
+  content += returnPartParams('核心变量', res.variables)
   content += returnPart('备注', res.comment)
   return content
 }
