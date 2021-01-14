@@ -37,5 +37,5 @@ export function absolutePathToRelative (rootPath: string, absolutePath: string) 
 }
 
 export function isFunction (content: string) {
-  return content.indexOf('function ')
+  return content.indexOf('function ') !== -1
 }

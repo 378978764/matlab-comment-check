@@ -38,6 +38,7 @@ export function refreshDiagnostics(doc: vscode.TextDocument, emojiDiagnostics: v
 			diagnostics.push(diagnostic)
 		}
 	}
+	
 	// function 那一行的变量
 	const functionVariabels = extractFunctionVariablesWithoutComment(doc.getText())
 	for (let variable of functionVariabels) {

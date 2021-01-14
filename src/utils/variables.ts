@@ -1,4 +1,5 @@
 import { extractFunction, functionCommentToString, getHasMapping, ParamItem } from './commentUtils';
+import { isFunction, readContent } from './reader';
 import TextUtils from "./TextUtils";
 
 type VariableItem = {
@@ -163,18 +164,22 @@ export function extractFunctionVariables(content: string): FunctionVariable {
 }
 
 export function extractFunctionVariablesWithoutComment(content: string) : Array<VariableItem> {
-  // 从 function 那一行提取的
-  const functionVariables = extractFunctionVariables(content)
-  // 从最上面的注释提取的
-  const commentFunction = extractFunction(content)
-  // 看一下哪些变量没有注释
-  const paramsMapping = getHasMapping(commentFunction.params)
-  const returnsMapping = getHasMapping(commentFunction.returns)
-  // 没有注释的 function 变量
-  const paramsNo = functionVariables.params.filter(v => !paramsMapping[v.name])
-  const returnsNo = functionVariables.returns.filter(v => !returnsMapping[v.name])
-  const noArr = paramsNo.concat(returnsNo)
-  return noArr
+  if (isFunction(content)) {
+    // 从 function 那一行提取的
+    const functionVariables = extractFunctionVariables(content)
+    // 从最上面的注释提取的
+    const commentFunction = extractFunction(content)
+    // 看一下哪些变量没有注释
+    const paramsMapping = getHasMapping(commentFunction.params)
+    const returnsMapping = getHasMapping(commentFunction.returns)
+    // 没有注释的 function 变量
+    const paramsNo = functionVariables.params.filter(v => !paramsMapping[v.name])
+    const returnsNo = functionVariables.returns.filter(v => !returnsMapping[v.name])
+    const noArr = paramsNo.concat(returnsNo)
+    return noArr
+  } else {
+    return []
+  }
 }
 
 /**
