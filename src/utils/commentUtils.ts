@@ -217,8 +217,24 @@ export function getCommentRange (content: string) : { start: number, end: number
   const arr = content.split('\n')
   let end = 0
   let start = 0
+  // 是否处于多行注释
+  let inMultiComment = false
   for (let i = 0; i < arr.length; i++) {
     const line = arr[i].trim()
+    if (line === '%{') {
+      inMultiComment = true
+      end = end + arr[i].length + 1
+      continue
+    }
+    if (line === '%}') {
+      inMultiComment = false
+      end = end + arr[i].length + 1
+      continue
+    }
+    if (inMultiComment) {
+      end = end + arr[i].length + 1
+      continue
+    }
     if (!line.startsWith('%')) {
       return { start, end }
     } else {
