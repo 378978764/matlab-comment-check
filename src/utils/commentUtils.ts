@@ -164,9 +164,10 @@ function returnPart(key: string, value: string) : string {
 }
 
 function returnPartParams (key: string, params: Array<ParamItem>) : string {
-  return `% ${key}：\n${params.map(v => {
+  const res = `% ${key}：\n${params.map(v => {
     return `%   ${v.name}: ${v.value}${(v.comment === '-' || v.comment === '') ? '' : ' | ' + v.comment}`
   }).join('\n')}\n`
+  return res === '' ? '%   无' : res
 }
 
 export function functionCommentToString (res: CommentFunction) : string {

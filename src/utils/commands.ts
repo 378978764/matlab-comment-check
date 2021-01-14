@@ -5,7 +5,6 @@ import { extractVariables, mergeVariables } from './variables'
 import { isFunction } from './reader'
 
 function updateVariables(filePath: string) {
-  console.log('进入函数')
   const editor = vscode.window.activeTextEditor
   if (editor) {
     const doc = editor.document
@@ -29,7 +28,6 @@ function updateVariables(filePath: string) {
       newComment = fileCommentToString(res)
     }
     const rangeXY = getCommentRange(content)
-    console.log('更新核心变量', rangeXY, newComment)
     editor.edit(editBuilder => {
       const range = new Range(
         doc.positionAt(rangeXY.start),
@@ -43,11 +41,8 @@ function updateVariables(filePath: string) {
 }
 
 export function registerCommands(context: vscode.ExtensionContext) {
-  const prefix = 'matlabCommentCheck.'
-  const commands = [updateVariables]
-  for (let fun of commands) {
-    context.subscriptions.push(vscode.commands.registerCommand(
-      prefix + fun.name, fun
-    ))
-  }
+  // 更新核心变量
+  context.subscriptions.push(vscode.commands.registerCommand(
+    'matlabCommentCheck.updateVariables', updateVariables
+  ))
 }
