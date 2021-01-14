@@ -41,7 +41,7 @@ function getFunctionLine(content: string): FunctionLine {
 
 
 export function extractVariables(content: string): Array<VariableItem> {
-  const regex = /(\S+)\s*~?=/gm
+  const regex = /(\S+)\s*[><~]?=/gm
   let res = TextUtils.matchAll(content, regex)
   const excludeArray = [']', '[', ',', '，', '(', ')', '>']
   res = res.filter((v, i) => {
