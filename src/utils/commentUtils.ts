@@ -51,22 +51,41 @@ function getPart(content: string, part: string) {
   const arr = content.split('\n')
   let start = false
   let result = []
+  // 当前是否处于多行注释中
+  let inMultiComment = false
+  // 多行注释
+  let multiComment = ''
   for (let line of arr) {
     line = line.trim()
     if (line === titleLine) {
       start = true
       continue
     }
-    if (start && line.endsWith('：')) {
+    if (line === '%{') {
+      inMultiComment = true
+      continue
+    }
+    if (line === '%}') {
+      inMultiComment = false
+      result.push(`{%\n${multiComment}%}`)
+      multiComment = ''
+      continue
+    }
+    if (start && line.endsWith('：') && !inMultiComment) {
       // 停止
       break
     }
-    if (line === '') {
+    if (line === '' && !inMultiComment) {
       // 空行也停止
       break
     }
     if (start) {
-      result.push(line.slice(3).trim())
+      if (inMultiComment) {
+        multiComment = multiComment + line + '\n'
+      } else {
+        // 单行注释
+        result.push(line.slice(3).trim())
+      }
     }
   }
   // 返回结果
@@ -210,9 +229,7 @@ export function getCommentRange (content: string) : { start: number, end: number
   return { start, end }
 }
 
-const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\feature_range_test.m'
+const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\feature_range.m'
 const content = readContent(filePath)
 const res = extractFile(content)
-const variables = extractVariables(content)
-// 合并新老
-res.variables = mergeVariables(res.variables, variables)
+console.log(res.comment)
