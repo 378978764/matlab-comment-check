@@ -37,7 +37,13 @@
           "group": "1_modification"
         }
       ]
-    }
+    },
+    "snippets": [
+      {
+        "language": "matlab",
+        "path": "./src/snippets/matlab.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

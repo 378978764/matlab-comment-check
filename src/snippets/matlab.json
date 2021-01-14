@@ -1,0 +1,45 @@
+{
+	// Place your snippets for matlab here. Each snippet is defined under a snippet name and has a prefix, body and 
+	// description. The prefix is what is used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. Placeholders with the 
+	// same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	"函数注释": {
+		"prefix": "commentFunction",
+		"body": [
+			"% 功能：\n%   文件名称: $TM_FILENAME\n%   $1\n% 参数：\n%   key: value\n% 返回值：\n%   key: value\n% 备注：\n%   \n\nfunction $TM_FILENAME_BASE ()\n  $2\nend"
+		],
+		"description": "Log output to console"
+	},
+	"初始化环境": {
+		"prefix": "init",
+		"body": "%% 初始化环境\nclose all;\nclear;\nclc;\n"
+	},
+	"文件注释": {
+		"prefix": "commentFile",
+		"body": "% 功能：\n%   文件名称: $TM_FILENAME\n%   $1\n% 核心变量：\n%   name: comment\n% 备注：\n%\n\n"
+	},
+	"新建一个带标题的 figure": {
+		"prefix": "figureWithTitle",
+		"body": "figure('NumberTitle', 'Off', 'Name', '$1');"
+	},
+	"设置 figure 的标题": {
+		"prefix": "setFigureTitle",
+		"body": "set(gcf, 'NumberTitle', 'off', 'Name', '$1');"
+	},
+	"暂停一下": {
+		"prefix": "pause",
+		"body": "disp(\"暂停一下: $1\");pause;"
+	},
+	"最大化的 figure": {
+		"prefix": "figureMax",
+		"body": "figure('units', 'normalized', 'outerposition', [0 0 1 1]);"
+	}
+}
