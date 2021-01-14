@@ -5,6 +5,7 @@ import { extractVariables, mergeVariables } from './variables'
 import { isFunction } from './reader'
 
 function updateVariables(filePath: string) {
+  console.log('进入函数')
   const editor = vscode.window.activeTextEditor
   if (editor) {
     const doc = editor.document
@@ -28,6 +29,7 @@ function updateVariables(filePath: string) {
       newComment = fileCommentToString(res)
     }
     const rangeXY = getCommentRange(content)
+    console.log('更新核心变量', rangeXY, newComment)
     editor.edit(editBuilder => {
       const range = new Range(
         doc.positionAt(rangeXY.start),
