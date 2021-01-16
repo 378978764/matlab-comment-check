@@ -7,9 +7,15 @@ import { FunctionCommentAction } from './actions'
 
 import * as vscode from 'vscode';
 import { DiagnosticSeverity } from 'vscode';
-import { extractFunctionVariablesWithoutComment, extractVariables } from './utils/variables';
+import { extractFunctionVariablesWithoutComment, extractVariables, getFunctionCall, VariableItem } from './utils/variables';
 
 const SOURCE = 'Matlab Comment Checker'
+
+type VariableListItem = {
+	name: string,
+	code: string,
+	variables: VariableItem[]
+}
 
 /**
  * Analyzes the text document for problems. 
@@ -24,36 +30,46 @@ export function refreshDiagnostics(doc: vscode.TextDocument, matlabDiagnostics: 
 	}
 
 	const diagnostics: vscode.Diagnostic[] = [];
-	// 代码主体中的变量
-	const variables = extractVariables(doc.getText())
-	for (let variable of variables) {
-		if (variable.value === '') {
-			// value is empty
-			let diagnostic: vscode.Diagnostic = {
-				severity: DiagnosticSeverity.Warning,
-				range: new vscode.Range(doc.positionAt(variable.range.start), doc.positionAt(variable.range.end)),
-				message: `变量 ${variable.name} 没有注释`,
-				source: SOURCE,
+	const functionCalls = getFunctionCall(doc.getText())
+
+	// 变量列表
+	const variableList: VariableListItem[] = [
+		{
+			name: '变量',
+			code: '',
+			variables: extractVariables(doc.getText()),
+		},
+		{
+			name: '函数返回值',
+			code: '',
+			variables: functionCalls.reduce((prev, current) => {
+				return prev.concat(current.returns)
+			}, [] as VariableItem[]),
+		},
+		{
+			name: '函数参数',
+			code: FunctionCommentAction.ActionName,
+			variables: extractFunctionVariablesWithoutComment(doc.getText()),
+		},
+	]
+
+	// 生成诊断
+	variableList.forEach(v => {
+		for (let variable of v.variables) {
+			if (variable.value === '') {
+				diagnostics.push({
+					severity: DiagnosticSeverity.Warning,
+					range: new vscode.Range(
+						doc.positionAt(variable.range.start),
+						doc.positionAt(variable.range.end)
+					),
+					message: `${v.name} ${variable.name} 没有注释`,
+					source: SOURCE,
+					code: v.code
+				})
 			}
-			// 加入到结果
-			diagnostics.push(diagnostic)
 		}
-	}
-	
-	// function 那一行的变量
-	const functionVariabels = extractFunctionVariablesWithoutComment(doc.getText())
-	for (let variable of functionVariabels) {
-		diagnostics.push({
-			severity: DiagnosticSeverity.Warning,
-			range: new vscode.Range(
-				doc.positionAt(variable.range.start),
-				doc.positionAt(variable.range.end)
-			),
-			message: `函数参数 ${variable.name} 没有注释`,
-			source: SOURCE,
-			code: FunctionCommentAction.ActionName
-		})
-	}
+	})
 
 	matlabDiagnostics.set(doc.uri, diagnostics);
 }

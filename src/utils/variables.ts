@@ -1,11 +1,15 @@
+import { ParameterInformation } from 'vscode';
 import { extractFunction, functionCommentToString, getHasMapping, ParamItem } from './commentUtils';
 import { isFunction, readContent } from './reader';
 import TextUtils from "./TextUtils";
 
-type VariableItem = {
-  name: string,
+export interface VariableComment {
   value: string,
-  comment: string,
+  comment: string
+}
+
+export interface VariableItem extends VariableComment {
+  name: string,
   range: {
     start: number,
     end: number
@@ -13,14 +17,20 @@ type VariableItem = {
   lineNumber: number
 }
 
-type FunctionVariable = {
+export interface FunctionVariable {
   params: Array<VariableItem>,
   returns: Array<VariableItem>
 }
 
-type FunctionLine = {
+export interface FunctionLine {
   lineNumber: number,
   index: number
+}
+
+export interface FunctionCall {
+  name: string,
+  params: VariableItem[],
+  returns: VariableItem[]
 }
 
 function getFunctionLine(content: string): FunctionLine {
@@ -67,15 +77,7 @@ export function extractVariables(content: string): Array<VariableItem> {
         comments = line.replace(/^%+/g, '')
       }
     }
-    comments = comments.trim()
-    // 如果用 | 隔开，则前面的是注释，后面的是备注
-    const splitPosition = comments.indexOf('|')
-    let value = comments
-    let comment = '-'
-    if (splitPosition !== -1) {
-      value = comments.slice(0, splitPosition).trim()
-      comment = comments.slice(splitPosition + 1).trim()
-    }
+    const { value, comment } = splitValueAndComment(comments)
     // 如果没有注释，需要提供一个位置
     const item: VariableItem = {
       name: v[1],
@@ -174,9 +176,10 @@ export function extractFunctionVariablesWithoutComment(content: string) : Array<
     const returnsMapping = getHasMapping(commentFunction.returns)
     // 没有注释的 function 变量
     const paramsNo = functionVariables.params.filter(v => !paramsMapping[v.name])
-    const returnsNo = functionVariables.returns.filter(v => !returnsMapping[v.name])
-    const noArr = paramsNo.concat(returnsNo)
-    return noArr
+    // 返回值不在这里用了，因为返回值可能是多个
+    // const returnsNo = functionVariables.returns.filter(v => !returnsMapping[v.name])
+    // const noArr = paramsNo.concat(returnsNo)
+    return paramsNo
   } else {
     return []
   }
@@ -265,3 +268,91 @@ export function updateComment(content: string) : string {
   // 返回
   return functionCommentToString(commentFunction)
 }
+
+function splitValueAndComment (content: string) : VariableComment {
+  content = content.trim()
+  // 如果用 | 隔开，则前面的是注释，后面的是备注
+  const splitPosition = content.indexOf('|')
+  let value = content
+  let comment = '-'
+  if (splitPosition !== -1) {
+    value = content.slice(0, splitPosition).trim()
+    comment = content.slice(splitPosition + 1).trim()
+  }
+  return { value, comment }
+}
+
+/**
+ * 在源码的指定行，获取多个返回值的注释
+ * @param content 源码内容
+ * @param lineNumber 行号
+ */
+function getMultiCommentsAtLine(content: string, lineNumber: number) : VariableComment[] {
+  if (lineNumber < 0) {
+    return []
+  }
+  const arr = content.split('\n')
+  if (lineNumber >= arr.length) {
+    return []
+  }
+  const line = arr[lineNumber].trim()
+  const pattern = /\[(.+)\]/
+  const res = pattern.exec(line)
+  if (res) {
+    const comments = res[1].trim().split(',')
+    return comments.map(v => splitValueAndComment(v))
+  } else {
+    return []
+  }
+}
+
+/**
+ * 获取函数调用
+ * @param content 代码源码
+ */
+export function getFunctionCall (content: string) : FunctionCall[] {
+  let res : FunctionCall[] = []
+  // multiple returns
+  const regexMultiple = /\[(.+)\]\s*=\s*(\S+)\((.*)\)/g
+  const resMultiple = TextUtils.matchAll(content, regexMultiple)
+  res = res.concat(resMultiple.map(v => {
+    const currentLine = v[0]
+    // 行号
+    const lineNumber = TextUtils.getLineNumber(content, v.index)
+    // 从上一行找到注释
+    const comments = getMultiCommentsAtLine(content, lineNumber - 1)
+    // 开始的索引
+    const startIndex = v.index
+    // 返回值
+    const returnNames = v[1].replace(/\s/g, '').split(',')
+    const returns = returnNames.map((returnName, i) => {
+      const start = startIndex + currentLine.indexOf(returnName)
+      const end = start + returnName.length
+      let returnItem: VariableItem = {
+        name: returnName,
+        value: i < comments.length ? comments[i].value : '',
+        comment: i < comments.length ? comments[i].comment : '',
+        range: {
+          start: start,
+          end: end
+        },
+        lineNumber: lineNumber
+      }
+      return returnItem
+    })
+    // 参数
+    // const paramNames = v[3].replace(/\s/g, '').split(',')
+    return {
+      name: v[2],
+      returns: returns,
+      // 参数肯定已经被提取了，这里就不提取了
+      params: []
+    }
+  }))
+  return res
+}
+
+// const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\feature_range_3d\\range_to_feature_importance.m'
+// const content = readContent(filePath)
+// const res = getFunctionCall(content)
+// console.log(res)
