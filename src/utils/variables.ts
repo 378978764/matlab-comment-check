@@ -1,5 +1,3 @@
-import { VariableItem } from './variables'
-import { ParameterInformation } from 'vscode';
 import { extractFunction, functionCommentToString, getHasMapping, ParamItem } from './commentUtils';
 import { isFunction, readContent } from './reader';
 import TextUtils from "./TextUtils";
