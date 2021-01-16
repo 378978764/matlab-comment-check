@@ -8,20 +8,21 @@ export function updateVariables() {
   const editor = vscode.window.activeTextEditor
   if (editor) {
     const doc = editor.document
+    const fileName = doc.fileName
     const content = editor.document.getText()
     let newComment: string
     if (isFunction(content)) {
       // 如果是函数
       const res = extractFunction(content)
       // 合并新老
-      res.variables = extractVariablesAll(content)
+      res.variables = extractVariablesAll(content, fileName)
       // 写入编辑器
       newComment = functionCommentToString(res)
     } else {
       // 如果是文件
       const res = extractFile(content)
       // 合并新老
-      res.variables = extractVariablesAll(content)
+      res.variables = extractVariablesAll(content, fileName)
       // 写入编辑器
       newComment = fileCommentToString(res)
     }

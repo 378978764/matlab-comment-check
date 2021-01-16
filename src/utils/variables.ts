@@ -1,6 +1,7 @@
 import { extractFunction, functionCommentToString, getHasMapping, ParamItem } from './commentUtils';
 import { isFunction, readContent } from './reader';
 import TextUtils from "./TextUtils";
+import * as path from 'path'
 
 export interface VariableComment {
   value: string,
@@ -52,8 +53,8 @@ function getFunctionLine(content: string): FunctionLine {
  * 提取所有变量，包含函数调用的返回值
  * @param content 源码内容
  */
-export function extractVariablesAll(content: string): VariableItem[] {
-  const functionCalls = getFunctionCall(content)
+export function extractVariablesAll(content: string, fileName: string): VariableItem[] {
+  const functionCalls = getFunctionCall(content, fileName)
   const returns = functionCalls.reduce((prev, current) => prev.concat(current.returns), [] as VariableItem[])
   return extractVariables(content).concat(returns)
 }
@@ -65,10 +66,19 @@ export function extractVariablesAll(content: string): VariableItem[] {
  */
 export function extractVariables(content: string): Array<VariableItem> {
   const regex = /(\S+)\s*[><~]?=/gm
+  // 在注释中的
+  const regexInComment = /%[ \t]*(\S+)\s*[><~]?=/gm
   let res = TextUtils.matchAll(content, regex)
+  const resInComment = TextUtils.matchAll(content, regexInComment)
+  const variablesInComment = resInComment.map(v => v[1])
   const excludeArray = [']', '[', ',', '，', '(', ')', '>']
   res = res.filter((v, i) => {
     const variable = v[1]
+    // 不能在注释中
+    if (variablesInComment.includes(variable)) {
+      return false
+    }
+    // 不能含有特殊符号
     for (let exclude of excludeArray) {
       if (variable.includes(exclude)) {
         return false
@@ -186,8 +196,10 @@ export function extractFunctionVariablesWithoutComment(content: string): Array<V
     const commentFunction = extractFunction(content)
     // 看一下哪些变量没有注释
     const paramsMapping = getHasMapping(commentFunction.params)
+    const returnMapping = getHasMapping(commentFunction.returns)
     // 没有注释的 function 变量
-    const paramsNo = functionVariables.params.filter(v => !paramsMapping[v.name])
+    let paramsNo = functionVariables.params.filter(v => !paramsMapping[v.name])
+    paramsNo = paramsNo.concat(functionVariables.returns.filter(v => !returnMapping[v.name]))
     // 返回值不在这里用了，因为返回值可能是多个
     return paramsNo
   } else {
@@ -319,13 +331,20 @@ function getMultiCommentsAtLine(content: string, lineNumber: number): VariableCo
 /**
  * 获取函数调用
  * @param content 代码源码
+ * @param filePath 文件路径
  */
-export function getFunctionCall(content: string): FunctionCall[] {
+export function getFunctionCall(content: string, filePath: string): FunctionCall[] {
   let res: FunctionCall[] = []
+  let fileName = path.basename(filePath)
+  if (fileName.endsWith('.m')) {
+    fileName = fileName.slice(0, fileName.length - 2)
+  }
   // multiple returns
   const regexMultiple = /\[(.+)\]\s*=\s*(\S+)\((.*)\)/g
   const resMultiple = TextUtils.matchAll(content, regexMultiple)
   res = res.concat(resMultiple.map(v => {
+    // 函数名称
+    const functionName = v[2]
     const currentLine = v[0]
     // 行号
     const lineNumber = TextUtils.getLineNumber(content, v.index)
@@ -353,16 +372,19 @@ export function getFunctionCall(content: string): FunctionCall[] {
     // 参数
     // const paramNames = v[3].replace(/\s/g, '').split(',')
     return {
-      name: v[2],
+      name: functionName,
       returns: returns,
       // 参数肯定已经被提取了，这里就不提取了
       params: []
     }
   }))
+  // 去掉当前函数
+  res = res.filter(v => v.name !== fileName)
   return res
 }
 
-const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\test.m'
+const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\filter_plot.m'
 const content = readContent(filePath)
-const res = extractFunctionVariables(content)
-console.log(res)
+const res = getFunctionCall(content, 'filter_plot')
+
+console.log(res.map(v => v.name))
