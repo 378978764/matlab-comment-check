@@ -1,7 +1,7 @@
 import { Range } from 'vscode'
 import * as vscode from 'vscode'
 import { extractFile, extractFunction, fileCommentToString, functionCommentToString, getCommentRange } from './commentUtils'
-import { extractVariables, mergeVariables } from './variables'
+import { extractVariablesAll, mergeVariables } from './variables'
 import { isFunction } from './reader'
 
 export function updateVariables() {
@@ -13,7 +13,7 @@ export function updateVariables() {
     if (isFunction(content)) {
       // 如果是函数
       const res = extractFunction(content)
-      const variables = extractVariables(content)
+      const variables = extractVariablesAll(content)
       // 合并新老
       res.variables = mergeVariables(res.variables, variables)
       // 写入编辑器
@@ -21,7 +21,7 @@ export function updateVariables() {
     } else {
       // 如果是文件
       const res = extractFile(content)
-      const variables = extractVariables(content)
+      const variables = extractVariablesAll(content)
       // 合并新老
       res.variables = mergeVariables(res.variables, variables)
       // 写入编辑器

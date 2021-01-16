@@ -1,3 +1,4 @@
+import { VariableItem } from './variables'
 import { ParameterInformation } from 'vscode';
 import { extractFunction, functionCommentToString, getHasMapping, ParamItem } from './commentUtils';
 import { isFunction, readContent } from './reader';
@@ -49,7 +50,21 @@ function getFunctionLine(content: string): FunctionLine {
   }
 }
 
+/**
+ * 提取所有变量，包含函数调用的返回值
+ * @param content 源码内容
+ */
+export function extractVariablesAll(content: string): VariableItem[] {
+  const functionCalls = getFunctionCall(content)
+  const returns = functionCalls.reduce((prev, current) => prev.concat(current.returns), [] as VariableItem[])
+  return extractVariables(content).concat(returns)
+}
 
+
+/**
+ * 提取源码当前文件的变量，不包含函数调用的返回值
+ * @param content 源码
+ */
 export function extractVariables(content: string): Array<VariableItem> {
   const regex = /(\S+)\s*[><~]?=/gm
   let res = TextUtils.matchAll(content, regex)
@@ -145,7 +160,7 @@ export function extractFunctionVariables(content: string): FunctionVariable {
   // 多个变量
   const regex = /function\s\[(.+)\]\s/gm
   const multiRes = TextUtils.matchAll(content, regex)
-  let returns : Array<string> = []
+  let returns: Array<string> = []
   if (multiRes.length > 0) {
     returns = multiRes[0][1].replace(/\s/g, '').split(',')
   } else {
@@ -165,7 +180,7 @@ export function extractFunctionVariables(content: string): FunctionVariable {
   return res
 }
 
-export function extractFunctionVariablesWithoutComment(content: string) : Array<VariableItem> {
+export function extractFunctionVariablesWithoutComment(content: string): Array<VariableItem> {
   if (isFunction(content)) {
     // 从 function 那一行提取的
     const functionVariables = extractFunctionVariables(content)
@@ -191,8 +206,8 @@ export function extractFunctionVariablesWithoutComment(content: string) : Array<
  * @param oldParams 旧的，源码头部注释中写地点
  * @param bodyVariables 新的，从源码整体中提取的
  */
-export function mergeVariables (oldParams: ParamItem[], bodyVariables: VariableItem[]) : ParamItem[] {
-  let newParams : Array<ParamItem> = []
+export function mergeVariables(oldParams: ParamItem[], bodyVariables: VariableItem[]): ParamItem[] {
+  let newParams: Array<ParamItem> = []
   for (let variable of bodyVariables) {
     if (variable.value === '') {
       // 主体中没有写
@@ -225,8 +240,8 @@ export function mergeVariables (oldParams: ParamItem[], bodyVariables: VariableI
  * @param oldParams 旧的，源码中写的参数
  * @param functionVariables 新的，在 funciton 那一行写的参数
  */
-export function getNewParams (oldParams: ParamItem[], functionVariables: VariableItem[]) : ParamItem[] {
-  let newParams : Array<ParamItem> = []
+export function getNewParams(oldParams: ParamItem[], functionVariables: VariableItem[]): ParamItem[] {
+  let newParams: Array<ParamItem> = []
   for (let param of functionVariables) {
     let oldParam = oldParams.find(v => v.name === param.name)
     if (oldParam) {
@@ -254,7 +269,7 @@ export function getNewParams (oldParams: ParamItem[], functionVariables: Variabl
  * 这里更新的是函数的
  * @param content 源码
  */
-export function updateComment(content: string) : string {
+export function updateComment(content: string): string {
   // 得到原来的注释
   let commentFunction = extractFunction(content)
   // function 那一行
@@ -269,7 +284,7 @@ export function updateComment(content: string) : string {
   return functionCommentToString(commentFunction)
 }
 
-function splitValueAndComment (content: string) : VariableComment {
+function splitValueAndComment(content: string): VariableComment {
   content = content.trim()
   // 如果用 | 隔开，则前面的是注释，后面的是备注
   const splitPosition = content.indexOf('|')
@@ -287,7 +302,7 @@ function splitValueAndComment (content: string) : VariableComment {
  * @param content 源码内容
  * @param lineNumber 行号
  */
-function getMultiCommentsAtLine(content: string, lineNumber: number) : VariableComment[] {
+function getMultiCommentsAtLine(content: string, lineNumber: number): VariableComment[] {
   if (lineNumber < 0) {
     return []
   }
@@ -310,8 +325,8 @@ function getMultiCommentsAtLine(content: string, lineNumber: number) : VariableC
  * 获取函数调用
  * @param content 代码源码
  */
-export function getFunctionCall (content: string) : FunctionCall[] {
-  let res : FunctionCall[] = []
+export function getFunctionCall(content: string): FunctionCall[] {
+  let res: FunctionCall[] = []
   // multiple returns
   const regexMultiple = /\[(.+)\]\s*=\s*(\S+)\((.*)\)/g
   const resMultiple = TextUtils.matchAll(content, regexMultiple)
