@@ -13,17 +13,15 @@ export function updateVariables() {
     if (isFunction(content)) {
       // 如果是函数
       const res = extractFunction(content)
-      const variables = extractVariablesAll(content)
       // 合并新老
-      res.variables = mergeVariables(res.variables, variables)
+      res.variables = extractVariablesAll(content)
       // 写入编辑器
       newComment = functionCommentToString(res)
     } else {
       // 如果是文件
       const res = extractFile(content)
-      const variables = extractVariablesAll(content)
       // 合并新老
-      res.variables = mergeVariables(res.variables, variables)
+      res.variables = extractVariablesAll(content)
       // 写入编辑器
       newComment = fileCommentToString(res)
     }
