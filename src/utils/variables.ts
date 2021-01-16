@@ -413,6 +413,7 @@ export function getTypesInContent (content: string) : TypeItem[] {
   const res = TextUtils.matchAll(content, pattern)
   // 获取配置
   const typeNames = getTypeNames()
+  // const typeNames = ['AAA']
   return res.map(v => {
     const name = v[1]
     const start = v.index + v[0].indexOf(name)
@@ -428,9 +429,3 @@ export function getTypesInContent (content: string) : TypeItem[] {
     return item
   })
 } 
-
-const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\filter_plot.m'
-const content = readContent(filePath)
-const res = getFunctionCall(content, 'filter_plot')
-
-console.log(res.map(v => v.name))

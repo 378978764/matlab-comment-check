@@ -1,6 +1,6 @@
 import { Diagnostic, Range } from 'vscode'
 import { TextDocument } from 'vscode'
-import { FunctionCommentAction, TypeAction } from './actions'
+import { ACTIONS } from './actions'
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
@@ -58,7 +58,7 @@ function getVariableDiagnostics (doc: TextDocument) : vscode.Diagnostic[]{
 		},
 		{
 			name: '函数参数',
-			code: FunctionCommentAction.ActionName,
+			code: ACTIONS.FUNCTION_COMMMENT,
 			variables: functionParamVariables,
 		},
 	]
@@ -98,7 +98,7 @@ function getTypeDiagnostics (doc: TextDocument) : vscode.Diagnostic[] {
 			),
 			message: `类型 ${v.name} 不存在`,
 			source: SOURCE,
-			code: TypeAction.ActionName,
+			code: ACTIONS.INSERT_TYPE,
 		}
 		return d
 	})
@@ -117,13 +117,13 @@ export function refreshDiagnostics(doc: vscode.TextDocument, matlabDiagnostics: 
 	if (doc.languageId !== 'matlab') {
 		return
 	}
+	
+	const variableDiagnostics = getVariableDiagnostics(doc)
+	const typeDiagnostics = getTypeDiagnostics(doc)
 
-	const diagnostics : vscode.Diagnostic[] = [
-		...getVariableDiagnostics(doc),
-		...getTypeDiagnostics(doc)
-	]
+	const arr : Diagnostic[] = []
 
-	matlabDiagnostics.set(doc.uri, diagnostics);
+	matlabDiagnostics.set(doc.uri, arr.concat(variableDiagnostics, typeDiagnostics));
 }
 
 export function subscribeToDocumentChanges(context: vscode.ExtensionContext, matlabDiagnostics: vscode.DiagnosticCollection): void {

@@ -2,7 +2,6 @@
  * 将注释对象化管理
  */
 
-import { readContent } from "./reader"
 import TextUtils from "./TextUtils"
 
 export type ParamItem = {
@@ -252,8 +251,3 @@ export function getCommentRange (content: string) : { start: number, end: number
   }
   return { start, end }
 }
-
-// const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\featureMerge.m'
-// const content = readContent(filePath)
-// const res = extractFunction(content)
-// console.log(res.params)

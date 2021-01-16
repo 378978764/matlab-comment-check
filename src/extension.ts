@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { FunctionCommentAction } from './actions';
+import { CommonAction } from './actions';
 import { subscribeToDocumentChanges } from './diagnostics';
 import { registerCommands } from './utils/commands';
 
@@ -13,9 +13,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	subscribeToDocumentChanges(context, matlabCommentDiagnostics);
 
+	// 注册 QuickFix: 更新函数注释
 	context.subscriptions.push(
-		vscode.languages.registerCodeActionsProvider('matlab', new FunctionCommentAction(), {
-			providedCodeActionKinds: FunctionCommentAction.providedCodeActionKinds
+		vscode.languages.registerCodeActionsProvider('matlab', new CommonAction(), {
+			providedCodeActionKinds: CommonAction.providedCodeActionKinds
 		})
 	);
 
