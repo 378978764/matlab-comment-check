@@ -3,6 +3,12 @@ import * as vscode from 'vscode'
 import { extractFile, extractFunction, fileCommentToString, functionCommentToString, getCommentRange } from './commentUtils'
 import { extractVariablesAll, mergeVariables } from './variables'
 import { isFunction } from './reader'
+import { readConfig, saveConfig } from './typeReader'
+
+export enum COMMANDS {
+  UPDATE_VARIABLES = 'matlabCommentCheck.updateVariables',
+  INSERT_TYPE = 'matlabCommentCheck.insertType'
+}
 
 export function updateVariables() {
   const editor = vscode.window.activeTextEditor
@@ -39,9 +45,24 @@ export function updateVariables() {
   }
 }
 
+function insertType (name: string) {
+  const config = readConfig()
+  if (config) {
+    config[name] = {
+      path: '$1',
+      name: '$2'
+    }
+    saveConfig(config)
+  }
+}
+
 export function registerCommands(context: vscode.ExtensionContext) {
   // 更新核心变量
   context.subscriptions.push(vscode.commands.registerCommand(
-    'matlabCommentCheck.updateVariables', updateVariables
+    COMMANDS.UPDATE_VARIABLES, updateVariables
+  ))
+  // 类型文件中插入类型
+  context.subscriptions.push(vscode.commands.registerCommand(
+    COMMANDS.INSERT_TYPE, insertType
   ))
 }

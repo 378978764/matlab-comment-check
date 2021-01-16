@@ -1,4 +1,6 @@
-import { FunctionCommentAction } from './actions'
+import { Diagnostic, Range } from 'vscode'
+import { TextDocument } from 'vscode'
+import { FunctionCommentAction, TypeAction } from './actions'
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
@@ -7,7 +9,7 @@ import { FunctionCommentAction } from './actions'
 
 import * as vscode from 'vscode';
 import { DiagnosticSeverity } from 'vscode';
-import { extractFunctionVariablesWithoutComment, extractVariables, getFunctionCall, VariableItem } from './utils/variables';
+import { extractFunctionVariablesWithoutComment, extractVariables, getFunctionCall, getTypesInContent, VariableItem } from './utils/variables';
 import { getHasMapping } from './utils/commentUtils';
 
 const SOURCE = 'Matlab Comment Checker'
@@ -18,18 +20,12 @@ type VariableListItem = {
 	variables: VariableItem[]
 }
 
-/**
- * Analyzes the text document for problems. 
- * This demo diagnostic problem provider finds all mentions of 'emoji'.
- * @param doc text document to analyze
- * @param matlabDiagnostics diagnostic collection
- */
-export function refreshDiagnostics(doc: vscode.TextDocument, matlabDiagnostics: vscode.DiagnosticCollection): void {
-	// 仅仅对 matlab 文件提出诊断
-	if (doc.languageId !== 'matlab') {
-		return
-	}
 
+/**
+ * 获取变量有关的诊断
+ * @param doc 当前文档
+ */
+function getVariableDiagnostics (doc: TextDocument) : vscode.Diagnostic[]{
 	const diagnostics: vscode.Diagnostic[] = [];
 	const functionCalls = getFunctionCall(doc.getText(), doc.fileName)
 	// 变量
@@ -67,8 +63,6 @@ export function refreshDiagnostics(doc: vscode.TextDocument, matlabDiagnostics: 
 		},
 	]
 	
-	// 生成一个
-
 	// 生成诊断
 	variableList.forEach(v => {
 		for (let variable of v.variables) {
@@ -86,6 +80,48 @@ export function refreshDiagnostics(doc: vscode.TextDocument, matlabDiagnostics: 
 			}
 		}
 	})
+	return diagnostics
+}
+
+/**
+ * 获取类型有关的诊断
+ * @param doc 文档
+ */
+function getTypeDiagnostics (doc: TextDocument) : vscode.Diagnostic[] {
+	const typeItems = getTypesInContent(doc.getText())
+	const diagnostics = typeItems.filter(v => !v.valid).map(v => {
+		const d: Diagnostic = {
+			severity: DiagnosticSeverity.Warning,
+			range: new Range(
+				doc.positionAt(v.range.start),
+				doc.positionAt(v.range.end)
+			),
+			message: `类型 ${v.name} 不存在`,
+			source: SOURCE,
+			code: TypeAction.ActionName,
+		}
+		return d
+	})
+	return diagnostics
+}
+
+
+/**
+ * Analyzes the text document for problems. 
+ * This demo diagnostic problem provider finds all mentions of 'emoji'.
+ * @param doc text document to analyze
+ * @param matlabDiagnostics diagnostic collection
+ */
+export function refreshDiagnostics(doc: vscode.TextDocument, matlabDiagnostics: vscode.DiagnosticCollection): void {
+	// 仅仅对 matlab 文件提出诊断
+	if (doc.languageId !== 'matlab') {
+		return
+	}
+
+	const diagnostics : vscode.Diagnostic[] = [
+		...getVariableDiagnostics(doc),
+		...getTypeDiagnostics(doc)
+	]
 
 	matlabDiagnostics.set(doc.uri, diagnostics);
 }

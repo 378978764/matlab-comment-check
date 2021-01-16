@@ -2,6 +2,7 @@ import { extractFunction, functionCommentToString, getHasMapping, ParamItem } fr
 import { isFunction, readContent } from './reader';
 import TextUtils from "./TextUtils";
 import * as path from 'path'
+import { getTypeNames } from './typeReader';
 
 export interface VariableComment {
   value: string,
@@ -15,6 +16,16 @@ export interface VariableItem extends VariableComment {
     end: number
   },
   lineNumber: number
+}
+
+export interface TypeItem {
+  name: string,
+  range: {
+    start: number,
+    end: number
+  },
+  lineNumber: number,
+  valid: boolean
 }
 
 export interface FunctionVariable {
@@ -390,8 +401,33 @@ export function getFunctionCall(content: string, filePath: string): FunctionCall
  */
 export function getMembers(filePath: string, name: string) : string[] {
   const content = readContent(filePath)
-  
+  return [] 
 }
+
+/**
+ * 在源码中找出使用的结构体类型。
+ * @param content 源码
+ */
+export function getTypesInContent (content: string) : TypeItem[] {
+  const pattern = /-->\s*([a-zA-Z]+)/gm
+  const res = TextUtils.matchAll(content, pattern)
+  // 获取配置
+  const typeNames = getTypeNames()
+  return res.map(v => {
+    const name = v[1]
+    const start = v.index + v[0].indexOf(name)
+    const item : TypeItem = {
+      name: name,
+      range: {
+        start: start,
+        end: start + name.length
+      },
+      lineNumber: TextUtils.getLineNumber(content, v.index),
+      valid: typeNames.includes(name)
+    }
+    return item
+  })
+} 
 
 const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\filter_plot.m'
 const content = readContent(filePath)
