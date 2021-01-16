@@ -1,7 +1,5 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, Command, Diagnostic, ProviderResult, Range, Selection, TextDocument, WorkspaceEdit } from "vscode";
-import { updateVariables } from "./utils/commands";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, Command, ProviderResult, Range, Selection, TextDocument, WorkspaceEdit } from "vscode";
 import { getCommentRange } from "./utils/commentUtils";
-import { readContent } from "./utils/reader";
 import { updateComment } from "./utils/variables";
 
 export class FunctionCommentAction implements CodeActionProvider {
@@ -9,7 +7,7 @@ export class FunctionCommentAction implements CodeActionProvider {
   provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, token: CancellationToken): ProviderResult<(CodeAction | Command)[]> {
     return context.diagnostics
     .filter(v => v.code === FunctionCommentAction.ActionName)
-    .map(v => this.createAction(document))
+    .map(() => this.createAction(document))
   }
   private createAction(doc: TextDocument): CodeAction {
     // 然后更新函数注释

@@ -383,6 +383,16 @@ export function getFunctionCall(content: string, filePath: string): FunctionCall
   return res
 }
 
+/**
+ * 在文件中寻找结构体的成员变量
+ * @param filePath 文件路径
+ * @param name 结构体名称
+ */
+export function getMembers(filePath: string, name: string) : string[] {
+  const content = readContent(filePath)
+  
+}
+
 const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\filter_plot.m'
 const content = readContent(filePath)
 const res = getFunctionCall(content, 'filter_plot')
