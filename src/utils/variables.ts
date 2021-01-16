@@ -144,7 +144,7 @@ export function extractFunctionVariables(content: string): FunctionVariable {
   /**
    * 函数参数
    */
-  const params = line.split('(')[1].split(')')[0].replace(/\s/g, '').split(',')
+  const params = line.split('(')[1].split(')')[0].replace(/\s/g, '').split(',').filter(v => v !== '')
   // 参数的位置
   const functionLine = getFunctionLine(content)
   res.params = stringArrayToVariables({
@@ -186,12 +186,9 @@ export function extractFunctionVariablesWithoutComment(content: string): Array<V
     const commentFunction = extractFunction(content)
     // 看一下哪些变量没有注释
     const paramsMapping = getHasMapping(commentFunction.params)
-    const returnsMapping = getHasMapping(commentFunction.returns)
     // 没有注释的 function 变量
     const paramsNo = functionVariables.params.filter(v => !paramsMapping[v.name])
     // 返回值不在这里用了，因为返回值可能是多个
-    // const returnsNo = functionVariables.returns.filter(v => !returnsMapping[v.name])
-    // const noArr = paramsNo.concat(returnsNo)
     return paramsNo
   } else {
     return []
@@ -365,7 +362,7 @@ export function getFunctionCall(content: string): FunctionCall[] {
   return res
 }
 
-// const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\feature_range_3d\\range_to_feature_importance.m'
-// const content = readContent(filePath)
-// const res = getFunctionCall(content)
-// console.log(res)
+const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\test.m'
+const content = readContent(filePath)
+const res = extractFunctionVariables(content)
+console.log(res)
