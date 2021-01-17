@@ -14,7 +14,7 @@ function provideCompletionItems(document: TextDocument, position: vscode.Positio
     // struct member names
     let structNames = tool.getStructNames(document.fileName, content)
     // 去重
-    structNames = structNames.filter(v => !structNames.find(vv => vv.name === v.name))
+    structNames = structNames.filter((v, i) => structNames.findIndex(vv => vv.name === v.name) !== i)
     const structCompletions = structNames.map(structName => {
       const completion = new vscode.CompletionItem(structName.name)
       completion.commitCharacters = ['.']

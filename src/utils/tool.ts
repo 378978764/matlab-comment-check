@@ -200,6 +200,7 @@ function findMemberNames(content: string, structName: StructName): string[] {
     // 其他文件
     const filePath = path.resolve(getWorkspaceFolderPath(), structName.config.path)
     content = readContent(filePath)
+    name = structName.config.name
   } else {
     // 当前文件, 什么也不做
   }
@@ -222,7 +223,8 @@ function getStructNames (fileName: string, content: string) : StructName[] {
   const res = TextUtils.matchAll(content, regex)
   let names = res.map(v => v[1])
   // unique it and exclude filename
-  const basename = fileName.slice(0, fileName.length - 2)
+  let basename = path.basename(fileName)
+  basename = basename.slice(0, basename.length - 2)
   names = names.filter((v, i) => names.indexOf(v) === i && v !== basename)
   // 转换成 StructName
   let structNames: StructName[] = names.map(v => {

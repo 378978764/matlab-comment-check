@@ -431,6 +431,24 @@ export function getTypesInContent (content: string) : TypeItem[] {
 }
 
 export function getStructVariablesWithType (content: string, fileName: string) : VariableItem[] {
-  const variables = extractVariablesAll(content, fileName)
+  // 正文、函数调用
+  let variables = extractVariablesAll(content, fileName)
+  // function 那一行的参数
+  if (isFunction(content)) {
+    const f = extractFunction(content)
+    variables = variables.concat(
+      f.params.map(v => {
+        let item : VariableItem = {
+          range: {
+            start: 0,
+            end: 0
+          },
+          lineNumber: 0,
+          ...v
+        }
+        return item
+      })
+    )
+  }
   return variables.filter(v => v.value.includes('-->'))
 }
