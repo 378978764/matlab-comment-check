@@ -1,18 +1,23 @@
-import { readContent } from "./reader"
 import TextUtils from "./TextUtils"
-
-const path = require("path")
-const fs = require("fs")
-
-type StructCompletion = {
-  name: string,
-  members: string[]
-}
+import { getWorkspaceFolderPath, readConfig } from "./typeReader"
+import { getStructVariablesWithType } from "./variables"
+import * as path from 'path'
+import * as fs from 'fs'
+import { Uri } from "vscode"
+import { readContent } from "./reader"
 
 type FunctionCall = {
   name: string,
   params: string[],
   returns: string[]
+}
+
+type StructName = {
+  name: string,
+  config?: {
+    path: string,
+    name: string
+  }
 }
 
 /**
@@ -186,12 +191,19 @@ function getRangesByName(content: string, name: string) {
 
 /**
  * find struct member names in code content
- * @param fileName the file name
  * @param content the code content
  * @param structName the struct name
  */
-function findMemberNames(fileName: string, content: string, structName: string): string[] {
-  const regex = new RegExp(`\\s?${structName}\\.(\\S+);?`, 'gm')
+function findMemberNames(content: string, structName: StructName): string[] {
+  let name = structName.name
+  if (structName.config) {
+    // 其他文件
+    const filePath = path.resolve(getWorkspaceFolderPath(), structName.config.path)
+    content = readContent(filePath)
+  } else {
+    // 当前文件, 什么也不做
+  }
+  const regex = new RegExp(`\\s?${name}\\.(\\S+);?`, 'gm')
   const res = TextUtils.matchAll(content, regex)
   let names = res.map(v => v[1].replace(';', '').replace(':', ''))
   // exclude variant member names
@@ -201,30 +213,52 @@ function findMemberNames(fileName: string, content: string, structName: string):
   return names
 }
 
-function getStructNames (fileName: string, content: string) : string[] {
+function getStructNames (fileName: string, content: string) : StructName[] {
+  /**
+   * 当前代码中的结构体
+   */
   // get all struct names
   const regex = /([a-zA-Z\_][0-9a-zA-Z\_]*)\./gm
   const res = TextUtils.matchAll(content, regex)
-  let structNames = res.map(v => v[1])
+  let names = res.map(v => v[1])
   // unique it and exclude filename
   const basename = fileName.slice(0, fileName.length - 2)
-  structNames = structNames.filter((v, i) => structNames.indexOf(v) === i && v !== basename)
-  return structNames
-}
-
-/**
- * get struct completions from code content
- * @param content the code content
- */
-function getStructCompletions(fileName: string, content: string): StructCompletion[] {
-  // get all struct names
-  const structNames = getStructNames(fileName, content)
-  return structNames.map(name => {
+  names = names.filter((v, i) => names.indexOf(v) === i && v !== basename)
+  // 转换成 StructName
+  let structNames: StructName[] = names.map(v => {
     return {
-      name: name,
-      members: findMemberNames(fileName, content, name)
+      name: v
     }
   })
+  /**
+   * 使用类型标记的
+   */
+  const config = readConfig()
+  if (config) {
+    const structVariabelsWithType = getStructVariablesWithType(content, fileName)
+    // 转换成 StructName
+    for (let variable of structVariabelsWithType) {
+      // 找类型
+      const pattern = /-->\s*([a-zA-Z]+)/gm
+      const matchRes = pattern.exec(variable.value)
+      if (!matchRes) {
+        continue
+      }
+      // 类型是否存在
+      const typeName = matchRes[1]
+      if (Object.keys(config).includes(typeName)) {
+        let structName : StructName = {
+          name: variable.name,
+          config: {
+            path: config[typeName].path,
+            name: config[typeName].name
+          }
+        }
+        structNames.push(structName)
+      }
+    }
+  }
+  return structNames
 }
 
 function getFunctionCall (content: string) : FunctionCall[] {
@@ -248,11 +282,5 @@ export default {
   getCurrentFileVariables,
   getRangesByName,
   findMemberNames,
-  getStructCompletions,
   getStructNames
 }
-
-// const filePath = 'C:\\Users\\sheng\\Documents\\code\\matlab\\quaternion_matlab\\日常行为分析\\feature_visualize\\feature_range_3d\\range_to_feature_importance.m'
-// const content = readContent(filePath)
-// const res = getFunctionCall(content)
-// console.log(res)

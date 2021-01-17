@@ -1,4 +1,4 @@
-import { WorkspaceEdit, Range } from 'vscode'
+import { Range } from 'vscode'
 import * as fs from 'fs'
 import * as vscode from 'vscode'
 import * as path from 'path'
@@ -8,6 +8,16 @@ interface Config {
   [key: string]: {
     path: string,
     name: string
+  }
+}
+
+export function getWorkspaceFolderPath() {
+  const workspaceFolders = vscode.workspace.workspaceFolders
+  if (workspaceFolders) {
+    const workspaceFolder = workspaceFolders.map(v => v.uri.fsPath)[0]
+    return workspaceFolder
+  } else {
+    return ''
   }
 }
 

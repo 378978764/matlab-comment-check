@@ -63,6 +63,7 @@ function getFunctionLine(content: string): FunctionLine {
 /**
  * 提取所有变量，包含函数调用的返回值
  * @param content 源码内容
+ * @param fileName 文件名
  */
 export function extractVariablesAll(content: string, fileName: string): VariableItem[] {
   const functionCalls = getFunctionCall(content, fileName)
@@ -413,7 +414,6 @@ export function getTypesInContent (content: string) : TypeItem[] {
   const res = TextUtils.matchAll(content, pattern)
   // 获取配置
   const typeNames = getTypeNames()
-  // const typeNames = ['AAA']
   return res.map(v => {
     const name = v[1]
     const start = v.index + v[0].indexOf(name)
@@ -428,4 +428,9 @@ export function getTypesInContent (content: string) : TypeItem[] {
     }
     return item
   })
-} 
+}
+
+export function getStructVariablesWithType (content: string, fileName: string) : VariableItem[] {
+  const variables = extractVariablesAll(content, fileName)
+  return variables.filter(v => v.value.includes('-->'))
+}

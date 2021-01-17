@@ -12,15 +12,17 @@ function provideCompletionItems(document: TextDocument, position: vscode.Positio
   if (content) {
     let res: vscode.CompletionItem[]
     // struct member names
-    const structNames = tool.getStructNames(document.fileName, content)
-    const structCompletions = structNames.map(name => {
-      const completion = new vscode.CompletionItem(name)
+    let structNames = tool.getStructNames(document.fileName, content)
+    // 去重
+    structNames = structNames.filter(v => !structNames.find(vv => vv.name === v.name))
+    const structCompletions = structNames.map(structName => {
+      const completion = new vscode.CompletionItem(structName.name)
       completion.commitCharacters = ['.']
       return completion
     })
     // common commands
     let commands = tool.getCommands(document.fileName, content)
-    commands = commands.filter(v => !structNames.includes(v))
+    commands = commands.filter(v => !structNames.find(structName => structName.name === v))
     const commandsCompletions = commands.map(
       (v) => new vscode.CompletionItem(v, vscode.CompletionItemKind.Field)
     )
@@ -55,10 +57,15 @@ export default function (context: vscode.ExtensionContext) {
         const linePrefix = document.lineAt(position).text.substr(0, position.character);
 
         const structNames = tool.getStructNames(document.fileName, document.getText())
-        for (let name of structNames) {
-          const prefix = `${name}.`
+        for (let structName of structNames) {
+          const prefix = `${structName.name}.`
           if (linePrefix.endsWith(prefix)) {
-            const members = tool.findMemberNames(document.fileName, document.getText(), name)
+            // 看一下当前文件中有没有新增加结构体，也就是在 structNames 还有没有同名的
+            const nameList = structNames.filter(v => v.name === structName.name)
+            // 然后加载一块
+            const members = nameList.reduce((prev, current) => {
+              return prev.concat(tool.findMemberNames(document.getText(), current))
+            }, [] as string[])
             return members.map(v => new vscode.CompletionItem(
               v, vscode.CompletionItemKind.Method
             ))
