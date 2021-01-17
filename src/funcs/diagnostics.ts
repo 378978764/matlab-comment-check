@@ -9,8 +9,8 @@ import { ACTIONS } from './actions'
 
 import * as vscode from 'vscode';
 import { DiagnosticSeverity } from 'vscode';
-import { extractFunctionVariablesWithoutComment, extractVariables, getFunctionCall, getTypesInContent, VariableItem } from './utils/variables';
-import { getHasMapping } from './utils/commentUtils';
+import { extractFunctionVariablesWithoutComment, extractVariables, getFunctionCall, getTypesInContent, VariableItem } from '../utils/variables';
+import { getHasMapping } from '../utils/commentUtils';
 
 const SOURCE = 'Matlab Comment Checker'
 

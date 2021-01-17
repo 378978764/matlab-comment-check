@@ -1,10 +1,10 @@
-import { COMMANDS } from './utils/commands'
+import { COMMANDS } from '../utils/commands'
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, Command, Diagnostic, ProviderResult, Range, Selection, TextDocument, WorkspaceEdit } from "vscode";
 
 import * as vscode from 'vscode'
 import { downloadAndUnzipVSCode } from "vscode-test";
-import { getCommentRange } from "./utils/commentUtils";
-import { updateComment } from "./utils/variables";
+import { getCommentRange } from "../utils/commentUtils";
+import { updateComment } from "../utils/variables";
 
 export enum ACTIONS {
   FUNCTION_COMMMENT = 'FUNCTION_COMMENT',
@@ -14,7 +14,7 @@ export enum ACTIONS {
 export class CommonAction implements CodeActionProvider {
   provideCodeActions(doc: TextDocument, range: Range | Selection, context: CodeActionContext, token: CancellationToken): ProviderResult<(CodeAction | Command)[]> {
     return context.diagnostics
-      .filter(v => v.code !== null)
+      .filter(v => v.code && v.code !== '')
       .map(v => {
         switch (v.code) {
           case ACTIONS.FUNCTION_COMMMENT:
