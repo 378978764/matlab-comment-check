@@ -51,18 +51,26 @@ export async function saveConfig (config: Config) {
   const filePath = getConfigFilePath()
   // 首先清空
   if (filePath && fs.existsSync(filePath)) {
+    // 打开配置文件
     const doc = await vscode.workspace.openTextDocument(filePath)
+    await vscode.window.showTextDocument(doc)
+    // 生成新的配置文件内容
     const content = doc.getText()
-    const edit = new vscode.WorkspaceEdit()
-    const range = new Range(
-      doc.positionAt(0),
-      doc.positionAt(content.length)
-    )
-    const newContent = JSON.stringify(config, null, 2)
-    edit.replace(doc.uri, range, '')
-    vscode.workspace.applyEdit(edit)
+    let newContent = JSON.stringify(config, null, 2)
+    // 反斜杠要转义
+    newContent = newContent.replace(/\\/g, '\\\\')
+    // 获取到活动编辑器
     const editor = vscode.window.activeTextEditor
     if (editor) {
+      await editor.edit(async editBuilder => {
+        // 清空
+        const range = new Range(
+          doc.positionAt(0),
+          doc.positionAt(content.length)
+        )
+        editBuilder.replace(range, '')
+      })
+      // 插入新的
       editor.insertSnippet(new vscode.SnippetString(newContent), doc.positionAt(0))
     }
   }
