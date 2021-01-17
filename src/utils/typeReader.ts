@@ -47,11 +47,21 @@ export function readConfig(): Config | null {
       }
       return JSON.parse(content) as Config
     } catch {
-      console.warn(`类型配置文件读取失败: ${filePath}`)
+      const message = `类型配置文件读取失败: ${filePath}`
+      console.warn(message)
+      vscode.window.showErrorMessage(message)
       return null
     }
   } else {
-    console.warn(`类型配置文件不存在: ${filePath}`)
+    // 创建一个新的
+    if (filePath) {
+      fs.writeFileSync(filePath, '{}')
+      return readConfig()
+    } else {
+      const message = `类型配置文件不存在: ${filePath}`
+      console.warn(message)
+      vscode.window.showErrorMessage(message)
+    }
     return null
   }
 }
