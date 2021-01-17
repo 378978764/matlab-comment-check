@@ -1,6 +1,7 @@
 import { TextDocument } from "vscode";
 import * as vscode from 'vscode'
 import tool from '../utils/tool'
+import { getTypeNames } from "../utils/typeReader";
 
 
 /**
@@ -11,7 +12,9 @@ function provideCompletionItems(document: TextDocument, position: vscode.Positio
   const content = vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.getText();
   if (content) {
     let res: vscode.CompletionItem[]
-    // struct member names
+    /**
+     * 结构体变量
+     */
     let structNames = tool.getStructNames(document.fileName, content)
     // 去重
     structNames = structNames.filter((v, i) => structNames.findIndex(vv => vv.name === v.name) !== i)
@@ -20,12 +23,18 @@ function provideCompletionItems(document: TextDocument, position: vscode.Positio
       completion.commitCharacters = ['.']
       return completion
     })
-    // common commands
+    /**
+     * 普通变量
+     */
     let commands = tool.getCommands(document.fileName, content)
     commands = commands.filter(v => !structNames.find(structName => structName.name === v))
     const commandsCompletions = commands.map(
       (v) => new vscode.CompletionItem(v, vscode.CompletionItemKind.Field)
     )
+    /**
+     * 结构体类型
+     */
+
     res = commandsCompletions.concat(structCompletions)
     return res
   }
@@ -38,8 +47,50 @@ function resolveCompletionItem() {
   return null
 }
 
+function provideMembersCompletionItems(document: TextDocument, position: vscode.Position) {
+
+  // get all text until the `position` and check if it reads `console.`
+  // and if so then complete if `log`, `warn`, and `error`
+  const linePrefix = document.lineAt(position).text.substr(0, position.character);
+
+  const structNames = tool.getStructNames(document.fileName, document.getText())
+  for (let structName of structNames) {
+    const prefix = `${structName.name}.`
+    if (linePrefix.endsWith(prefix)) {
+      // 看一下当前文件中有没有新增加结构体，也就是在 structNames 还有没有同名的
+      const nameList = structNames.filter(v => v.name === structName.name)
+      // 然后加载一块
+      const members = nameList.reduce((prev, current) => {
+        return prev.concat(tool.findMemberNames(document.getText(), current))
+      }, [] as string[])
+      return members.map(v => new vscode.CompletionItem(
+        v, vscode.CompletionItemKind.Method
+      ))
+    }
+  }
+  return undefined
+}
+
+function provideTypesCompletionItems(document: TextDocument, position: vscode.Position) {
+
+  const linePrefix = document.lineAt(position).text.substr(0, position.character);
+  if (linePrefix.endsWith('-->')) {
+    // 说明想要输入结构体类型
+    const typeNames = getTypeNames()
+    return typeNames.map(v => new vscode.CompletionItem(
+      ` ${v}`,
+      vscode.CompletionItemKind.Value
+    ))
+  }
+
+  return undefined
+}
+
 
 export default function (context: vscode.ExtensionContext) {
+  /**
+   * 普通变量、结构体变量
+   */
   const provider1 = vscode.languages.registerCompletionItemProvider(
     "matlab",
     {
@@ -47,35 +98,27 @@ export default function (context: vscode.ExtensionContext) {
       resolveCompletionItem,
     }
   )
+  /**
+   * 结构体成员
+   */
   const provider2 = vscode.languages.registerCompletionItemProvider(
-		'matlab',
-		{
-			provideCompletionItems(document: vscode.TextDocument, position: vscode.Position) {
-
-				// get all text until the `position` and check if it reads `console.`
-				// and if so then complete if `log`, `warn`, and `error`
-        const linePrefix = document.lineAt(position).text.substr(0, position.character);
-
-        const structNames = tool.getStructNames(document.fileName, document.getText())
-        for (let structName of structNames) {
-          const prefix = `${structName.name}.`
-          if (linePrefix.endsWith(prefix)) {
-            // 看一下当前文件中有没有新增加结构体，也就是在 structNames 还有没有同名的
-            const nameList = structNames.filter(v => v.name === structName.name)
-            // 然后加载一块
-            const members = nameList.reduce((prev, current) => {
-              return prev.concat(tool.findMemberNames(document.getText(), current))
-            }, [] as string[])
-            return members.map(v => new vscode.CompletionItem(
-              v, vscode.CompletionItemKind.Method
-            ))
-          }
-        }
-        return undefined
-			}
-		},
-		'.' // triggered whenever a '.' is being typed
+    'matlab',
+    {
+      provideCompletionItems: provideMembersCompletionItems
+    },
+    '.'
   )
+  /**
+   * 结构体类型
+   */
+  const provider3 = vscode.languages.registerCompletionItemProvider(
+    'matlab',
+    {
+      provideCompletionItems: provideTypesCompletionItems
+    },
+    '>'
+  )
+
   // register the code
-  context.subscriptions.push(provider1, provider2)
+  context.subscriptions.push(provider1, provider2, provider3)
 }
