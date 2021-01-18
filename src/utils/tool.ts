@@ -203,7 +203,7 @@ function findMemberNames(content: string, structName: StructName): string[] {
   } else {
     // 当前文件, 什么也不做
   }
-  const regex = new RegExp(`\\s?${name}\\.(\\S+);?`, 'gm')
+  const regex = new RegExp(`\\s?\\b${name}\\.(\\S+);?`, 'gm')
   const res = TextUtils.matchAll(content, regex)
   let names = res.map(v => v[1].replace(';', '').replace(':', ''))
   // exclude variant member names
