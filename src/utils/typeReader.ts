@@ -2,7 +2,6 @@ import { Range } from 'vscode'
 import * as fs from 'fs'
 import * as vscode from 'vscode'
 import * as path from 'path'
-import { getMembers } from './variables'
 
 interface Config {
   [key: string]: {
@@ -104,25 +103,6 @@ export function getTypeNames () : string[] {
   const config = readConfig()
   if (config) {
     return Object.keys(config)
-  } else {
-    return []
-  }
-}
-
-/**
- * 根据类型名称获取类型的成员变量
- * @param typeName 类型名称
- */
-export function getTypeMembers(typeName: string): string[] {
-  const config = readConfig()
-  if (config) {
-    const item = config[typeName]
-    if (item) {
-      const { path, name } = item
-      return getMembers(path, name)
-    } else {
-      return []
-    }
   } else {
     return []
   }

@@ -3,7 +3,6 @@ import { getWorkspaceFolderPath, readConfig } from "./typeReader"
 import { getStructVariablesWithType } from "./variables"
 import * as path from 'path'
 import * as fs from 'fs'
-import { Uri } from "vscode"
 import { readContent } from "./reader"
 
 type FunctionCall = {

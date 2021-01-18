@@ -396,16 +396,6 @@ export function getFunctionCall(content: string, filePath: string): FunctionCall
 }
 
 /**
- * 在文件中寻找结构体的成员变量
- * @param filePath 文件路径
- * @param name 结构体名称
- */
-export function getMembers(filePath: string, name: string) : string[] {
-  const content = readContent(filePath)
-  return [] 
-}
-
-/**
  * 在源码中找出使用的结构体类型。
  * @param content 源码
  */
