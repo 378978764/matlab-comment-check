@@ -25,7 +25,7 @@ type StructName = {
  */
 function matchAddPath(str: string) {
   let addPaths: Array<string> = []
-  const regex = /^(?!\%)addpath\(["'](\S+)["']\)/gm
+  const regex = /^\s*(?!\%)addpath\(["'](\S+)["']\)/gm
   let m: RegExpExecArray | null
   while ((m = regex.exec(str)) !== null) {
     // This is necessary to avoid infinite loops with zero-width matches
