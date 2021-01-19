@@ -3,6 +3,7 @@ import { TextDocument } from "vscode";
 import * as vscode from 'vscode'
 import tool from '../utils/tool'
 import { getTypeNames } from "../utils/typeReader";
+import { extractVariablesAll } from '../utils/variables';
 
 
 /**
@@ -27,10 +28,25 @@ function provideCompletionItems(document: TextDocument, position: vscode.Positio
     /**
      * 普通变量
      */
+    // 变量名称
     let commands = tool.getCommands(document.fileName, content)
     commands = commands.filter(v => !structNames.find(structName => structName.name === v))
+    // 注释
+    const variables = extractVariablesAll(document.getText(), document.fileName)
+    const commentMapping = variables.reduce((prev, current) => {
+      if (current.value) {
+        prev[current.name] = current.value
+      }
+      return prev
+    }, {} as { [key: string]: string })
     const commandsCompletions = commands.map(
-      (v) => new vscode.CompletionItem(v, vscode.CompletionItemKind.Field)
+      (v) => {
+        const item = new vscode.CompletionItem(v, vscode.CompletionItemKind.Field)
+        if (commentMapping[v]) {
+          item.detail = commentMapping[v]
+        }
+        return item
+      }
     )
     /**
      * 结构体类型
