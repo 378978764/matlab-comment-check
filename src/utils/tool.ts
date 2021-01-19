@@ -1,17 +1,17 @@
 import TextUtils from "./TextUtils"
 import { getWorkspaceFolderPath, readConfig } from "./typeReader"
-import { getStructVariablesWithType } from "./variables"
+import { extractVariablesAll, getStructVariablesWithType } from "./variables"
 import * as path from 'path'
 import * as fs from 'fs'
 import { readContent } from "./reader"
 
-type FunctionCall = {
+interface FunctionCall {
   name: string,
   params: string[],
   returns: string[]
 }
 
-type StructName = {
+interface StructName {
   name: string,
   config?: {
     path: string,
@@ -19,6 +19,10 @@ type StructName = {
   }
 }
 
+export interface StructDetail {
+  name: string,
+  detail?: string
+}
 /**
  * Match and return dir paths in `addpath` command
  * @param {string} str current document content
@@ -193,13 +197,14 @@ function getRangesByName(content: string, name: string) {
  * @param content the code content
  * @param structName the struct name
  */
-function findMemberNames(content: string, structName: StructName): string[] {
+function findMemberNames(content: string, structName: StructName, fileName: string): StructDetail[] {
   let name = structName.name
   if (structName.config) {
     // 其他文件
     const filePath = path.resolve(getWorkspaceFolderPath(), structName.config.path)
     content = readContent(filePath)
     name = structName.config.name
+    fileName = filePath
   } else {
     // 当前文件, 什么也不做
   }
@@ -210,7 +215,19 @@ function findMemberNames(content: string, structName: StructName): string[] {
   names = names.filter(v => !/[\(\),]/.test(v))
   // unique it
   names = names.filter((v, i) => names.indexOf(v) === i)
-  return names
+  // 获取文件中的所有变量
+  const variables = extractVariablesAll(content, fileName)
+  const structDetails = names.map(v => {
+    const structDetail: StructDetail = {
+      name: v
+    }
+    const variable = variables.find(item => item.name === `${name}.${v}`)
+    if (variable) {
+      structDetail.detail = variable.value
+    }
+    return structDetail
+  })
+  return structDetails
 }
 
 function getStructNames (fileName: string, content: string) : StructName[] {

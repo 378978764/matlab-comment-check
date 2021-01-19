@@ -1,3 +1,4 @@
+import { StructDetail } from './../utils/tool'
 import { TextDocument } from "vscode";
 import * as vscode from 'vscode'
 import tool from '../utils/tool'
@@ -60,14 +61,32 @@ function provideMembersCompletionItems(document: TextDocument, position: vscode.
       // 看一下当前文件中有没有新增加结构体，也就是在 structNames 还有没有同名的
       const nameList = structNames.filter(v => v.name === structName.name)
       // 然后加载一块
-      let members = nameList.reduce((prev, current) => {
-        return prev.concat(tool.findMemberNames(document.getText(), current))
-      }, [] as string[])
-      // 对 members 再次进行去重
-      members = members.filter((v, i) => members.indexOf(v) === i)
-      return members.map(v => new vscode.CompletionItem(
-        v, vscode.CompletionItemKind.Method
-      ))
+      let members: StructDetail[] = nameList.reduce((prev, current) => {
+        return prev.concat(tool.findMemberNames(document.getText(), current, document.fileName))
+      }, [] as StructDetail[])
+      // 对 members 再次进行去重, 如果有重复的话，要求去掉没有 detail 的，留下有 detail 的
+      let memberNames = members.map(v => v.name)
+      memberNames = Array.from(new Set(memberNames))
+      members = memberNames.map(v => {
+        const validMembers = members.filter(member => member.name === v)
+        if (validMembers.length === 1) {
+          return validMembers[0]
+        } else {
+          const validMember = validMembers.find(v => typeof v.detail !== 'undefined')
+          if (validMember) {
+            return validMember
+          } else {
+            return validMembers[0]
+          }
+        }
+      })
+      return members.map(v => {
+        const completionItem = new vscode.CompletionItem(
+          v.name, vscode.CompletionItemKind.Method
+        )
+        completionItem.detail = v.detail
+        return completionItem
+      })
     }
   }
   return undefined
