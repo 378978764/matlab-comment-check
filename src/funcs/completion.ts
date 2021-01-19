@@ -60,9 +60,11 @@ function provideMembersCompletionItems(document: TextDocument, position: vscode.
       // 看一下当前文件中有没有新增加结构体，也就是在 structNames 还有没有同名的
       const nameList = structNames.filter(v => v.name === structName.name)
       // 然后加载一块
-      const members = nameList.reduce((prev, current) => {
+      let members = nameList.reduce((prev, current) => {
         return prev.concat(tool.findMemberNames(document.getText(), current))
       }, [] as string[])
+      // 对 members 再次进行去重
+      members = members.filter((v, i) => members.indexOf(v) === i)
       return members.map(v => new vscode.CompletionItem(
         v, vscode.CompletionItemKind.Method
       ))

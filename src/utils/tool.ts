@@ -207,7 +207,7 @@ function findMemberNames(content: string, structName: StructName): string[] {
   const res = TextUtils.matchAll(content, regex)
   let names = res.map(v => v[1].replace(';', '').replace(':', ''))
   // exclude variant member names
-  names = names.filter(v => !v.includes('('))
+  names = names.filter(v => !/[\(\),]/.test(v))
   // unique it
   names = names.filter((v, i) => names.indexOf(v) === i)
   return names
