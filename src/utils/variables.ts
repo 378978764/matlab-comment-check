@@ -97,7 +97,7 @@ export function extractVariables(content: string): Array<VariableItem> {
       }
     }
     // 去重，后面的不要了
-    if (res.findIndex(v => v[1] == variable) !== i) {
+    if (res.findIndex(v => v[1] === variable) !== i) {
       return false
     }
     return true
