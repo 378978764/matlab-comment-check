@@ -4,10 +4,12 @@ import * as vscode from 'vscode'
 import tool from '../utils/tool'
 import { getTypeNames } from "../utils/typeReader";
 import { extractVariablesAll } from '../utils/variables';
+import { extractFunction } from '../utils/commentUtils';
+import { isFunction } from '../utils/reader';
 
 
 /**
- * Auto-completion
+ * 普通变量、结构体变量
  * @param {*} document current document
  */
 function provideCompletionItems(document: TextDocument, position: vscode.Position) {
@@ -31,8 +33,23 @@ function provideCompletionItems(document: TextDocument, position: vscode.Positio
     // 变量名称
     let commands = tool.getCommands(document.fileName, content)
     commands = commands.filter(v => !structNames.find(structName => structName.name === v))
-    // 注释
-    const variables = extractVariablesAll(document.getText(), document.fileName)
+    // 注释 --> 普通变量
+    let variables = extractVariablesAll(document.getText(), document.fileName).map(v => {
+      return {
+        name: v.name,
+        value: v.value
+      }
+    })
+    // 注释 --> 函数参数
+    if (isFunction(content)) {
+      const commentFunction = extractFunction(content)
+      variables = variables.concat(commentFunction.params.map(v => {
+        return {
+          name: v.name,
+          value: v.value
+        }
+      }))
+    }
     const commentMapping = variables.reduce((prev, current) => {
       if (current.value) {
         prev[current.name] = current.value
@@ -64,6 +81,11 @@ function resolveCompletionItem() {
   return null
 }
 
+/**
+ * 结构体成员
+ * @param document 当前文档
+ * @param position 当前变量
+ */
 function provideMembersCompletionItems(document: TextDocument, position: vscode.Position) {
 
   // get all text until the `position` and check if it reads `console.`
@@ -108,6 +130,11 @@ function provideMembersCompletionItems(document: TextDocument, position: vscode.
   return undefined
 }
 
+/**
+ * 结构体类型
+ * @param document 当前文档
+ * @param position 当前位置
+ */
 function provideTypesCompletionItems(document: TextDocument, position: vscode.Position) {
 
   const linePrefix = document.lineAt(position).text.substr(0, position.character);
