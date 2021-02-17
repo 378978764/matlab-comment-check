@@ -9,6 +9,7 @@ import { registerCommands } from './utils/commands';
 import completion from './funcs/completion'
 import jumpToDefinition from './funcs/jumpToDefinition'
 import rename from './funcs/rename'
+import doubleCommentHighlight from './funcs/doubleCommentHighlight'
 
 export function activate(context: vscode.ExtensionContext) {
 	const matlabCommentDiagnostics = vscode.languages.createDiagnosticCollection("matlabComment");
@@ -32,6 +33,8 @@ export function activate(context: vscode.ExtensionContext) {
 	jumpToDefinition(context)
 	// 变量重命名
 	rename(context)
+	// 双百分比号高亮
+	doubleCommentHighlight(context)
 
 	// 提示用户
 	vscode.window.showInformationMessage('Matlab Comment Checker Plugin activated!')
