@@ -1,43 +1,30 @@
 import * as vscode from 'vscode';
 
 // this method is called when vs code is activated
-export default function(context: vscode.ExtensionContext) {
+export default function (context: vscode.ExtensionContext) {
 
 	console.log('decorator sample is activated');
 
 	let timeout: NodeJS.Timer | undefined = undefined;
 
-	// create a decorator type that we use to decorate small numbers
-	const smallNumberDecorationType = vscode.window.createTextEditorDecorationType({
+	// create a decorator type that we use to decorate large numbers
+	const doublePercentStart = vscode.window.createTextEditorDecorationType({
+		borderColor: 'grey',
 		borderWidth: '1px',
 		borderStyle: 'solid',
-		overviewRulerColor: 'blue',
-		overviewRulerLane: vscode.OverviewRulerLane.Right,
-		light: {
-			// this color will be used in light color themes
-			borderColor: 'darkblue'
-		},
-		dark: {
-			// this color will be used in dark color themes
-			borderColor: 'lightblue'
-		}
 	});
 
-	// create a decorator type that we use to decorate large numbers
-	const largeNumberDecorationType = vscode.window.createTextEditorDecorationType({
-		// use a themable color. See package.json for the declaration and default values.
-		// dark: {
-    //   color: 'white',
-    //   backgroundColor: '#007acc'
-    // },
-    // light: {
-    //   color: 'black',
-    //   backgroundColor: 'yellow'
-    // }
-    borderColor: 'grey',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-	});
+	const doublePercentDoubleEnd = vscode.window.createTextEditorDecorationType({
+		dark: {
+			backgroundColor: 'green',
+			color: 'white',
+		},
+		light: {
+			backgroundColor: 'yellow',
+			color: 'black'
+		},
+		fontWeight: 'bold'
+	})
 
 	let activeEditor = vscode.window.activeTextEditor;
 
@@ -45,17 +32,32 @@ export default function(context: vscode.ExtensionContext) {
 		if (!activeEditor) {
 			return;
 		}
-		const regEx = /%%.+/g;
-		const text = activeEditor.document.getText();
-		const largeNumbers: vscode.DecorationOptions[] = [];
+
+		// 以双百分比号开头
+		let regEx = /%%.+/g;
+		let text = activeEditor.document.getText();
+		let doublePercents: vscode.DecorationOptions[] = [];
 		let match;
 		while ((match = regEx.exec(text))) {
 			const startPos = activeEditor.document.positionAt(match.index);
 			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
-			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'Number **' + match[0] + '**' };
-      largeNumbers.push(decoration);
+			const decoration = { range: new vscode.Range(startPos, endPos) };
+			doublePercents.push(decoration);
 		}
-		activeEditor.setDecorations(largeNumberDecorationType, largeNumbers);
+		activeEditor.setDecorations(doublePercentStart, doublePercents);
+
+		// 以双百分开头，并以双百分比号结尾
+		regEx = /%%.+%%/g;
+		text = activeEditor.document.getText();
+		const doubleEndPercents: vscode.DecorationOptions[] = [];
+		while ((match = regEx.exec(text))) {
+			const startPos = activeEditor.document.positionAt(match.index);
+			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
+			const decoration = { range: new vscode.Range(startPos, endPos) };
+			doubleEndPercents.push(decoration);
+		}
+		activeEditor.setDecorations(doublePercentDoubleEnd, doubleEndPercents);
+		
 	}
 
 	function triggerUpdateDecorations() {
